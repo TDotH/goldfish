@@ -59,7 +59,7 @@ export const generateBins = () => {
     }
 
     //Push the actual index of the given card
-    for (let i = 0; i < (data.length) && i < del; i++ ) {
+    for (let i = 0; i < (data.length); i++ ) {
         let tempBin = retBins.find(x => x._id === parseInt(data[i]._binId));
         //Check for undefined and null (to prevent dev error on reload)
         if ((typeof(tempBin) !== 'undefined') && tempBin !== null) {
