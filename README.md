@@ -6,7 +6,7 @@ I did the entire front-end of the project on my own, but due to time constraints
 
 This repo will just be me finishing up getting an actual site up.
 
-##Check it out here!
+## Check it out here!
 
 Deployed using Heroku: https://goldfish-personal.herokuapp.com/
 
