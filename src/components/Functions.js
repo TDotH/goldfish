@@ -160,3 +160,5 @@ export const extraBins = [
 
 //Colors go from priority 1 -> 4 + "complete"
 export const colors = ["#CA2934", "#F89406", "#EBEB13", "#20DB30", "rgb(122, 122, 122)"];
+
+

@@ -189,12 +189,20 @@ class App extends Component {
       let bin = document.getElementById('bin-container');
       let binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
-      let elementWidth = bin.offsetWidth -
-                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight)) +
-                (parseFloat(binStyle.paddingLeft) + parseFloat(binStyle.paddingRight)) -
-                (parseFloat(binStyle.borderLeftWidth) + parseFloat(binStyle.borderRightWidth));
+      //Try to scroll within one bin's width (to prevent visual jank)
+      let elementWidth = bin.offsetWidth +
+                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+                //(parseFloat(binStyle.paddingLeft) + parseFloat(binStyle.paddingRight)) +
+                //(parseFloat(binStyle.borderLeftWidth) + parseFloat(binStyle.borderRightWidth));
+
 
       const currentScrollDelta = this.Scrollbar.getScrollLeft();
+      console.log("<------------------>");
+      console.log(currentScrollDelta);
+      console.log(bin.offsetWidth);
+      console.log(elementWidth);
+      console.log(e.deltaY);
+      console.log("+-----------------+");
       this.Scrollbar.scrollLeft(currentScrollDelta + (e.deltaY / Math.abs(e.deltaY)) * elementWidth);
     }
  }
@@ -340,7 +348,6 @@ class App extends Component {
         <div className="App">
             <Scrollbars id="Scrollbar"
               ref={ (Scrollbar) => {this.Scrollbar = Scrollbar;} }
-         
               autoHeight={true}
               autoHeightMax={1000}
               onWheel={this.handleScroll}
@@ -355,26 +362,26 @@ class App extends Component {
               renderView={props => <div {...props} className="view"/>}
             >
             <div id="Taskbins">
-            {this.state.bins.map((bin, index) => (
-              <Bin header={bin.header} 
-                  date={bin.date}
-                  binId = {bin._id}
-                  key={bin._id} 
-                  droppableId={bin._id} 
-                  backColor={bin.backingColor}
-                  dayColor={bin.headerColor}
-                  cards={bin.cards}
-                  isDisabled={this.state.showBinFocus}  
-                  openFocusBin={this.openFocusBin} 
-                  cardList={this.state.cardList}
-                  onBinEnter={this.onBinEnter}
-                  onBinLeave={this.onBinLeave}
-                  handleCardEdit={this.handleCardEdit}
-                  finishTask={this.finishTask}
-                  deleteTask={this.deleteTask}
-              />
-          ))}
-          </div>
+              {this.state.bins.map((bin, index) => (
+                <Bin header={bin.header} 
+                    date={bin.date}
+                    binId = {bin._id}
+                    key={bin._id} 
+                    droppableId={bin._id} 
+                    backColor={bin.backingColor}
+                    dayColor={bin.headerColor}
+                    cards={bin.cards}
+                    isDisabled={this.state.showBinFocus}  
+                    openFocusBin={this.openFocusBin} 
+                    cardList={this.state.cardList}
+                    onBinEnter={this.onBinEnter}
+                    onBinLeave={this.onBinLeave}
+                    handleCardEdit={this.handleCardEdit}
+                    finishTask={this.finishTask}
+                    deleteTask={this.deleteTask}
+                />
+            ))}
+            </div>
           </Scrollbars>
           <div>
             <BinFocused droppableId={taskFunctions.otherBins.focusedBin}

@@ -39,7 +39,7 @@ class Card extends Component{
     handleClickOutside(e) {
         this.setState({ edit: false });
     }
-
+    
     handleDeleteButton(e) {
         this.props.deleteTask( this.props.cardInfo._id, this.props.cardInfo._binId, this.props.index );
     }
@@ -56,7 +56,7 @@ class Card extends Component{
                 //Assume that given id is not a string already
                 draggableId={this.props.draggableId}>
                     {(provided, snapshot) => (
-                        <div
+                        <div 
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
@@ -72,7 +72,7 @@ class Card extends Component{
                                 <div className="card-header"
                                     onDoubleClick={this.handleDoubleClick}
                                 >
-                                        {(!this.state.edit) ? <p className='headerLabel'>{this.props.cardInfo.name}</p> :
+                                        {(!this.state.edit) ? <p className='headerLabel'>{this.props.cardInfo.name}</p> : 
                                         <textarea value={this.props.cardInfo.name}
                                                 disabled={!this.state.edit}
                                                 onChange={this.handleChange}
@@ -80,7 +80,7 @@ class Card extends Component{
                                                 className='headerLabel'
                                         />
                                         }
-                                    {provided.placeholder}
+                                    {provided.placeholder}                               
                                 </div>
 
                                 <select value={this.props.cardInfo.quad}
