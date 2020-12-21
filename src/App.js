@@ -21,7 +21,8 @@ class App extends Component {
       showNewTask: false,
       showBinFocus: false,
       allowHorizontalScroll: true,
-      isDragging: false
+      isDragging: false,
+      isScrolling: false
     };
 
     //Mount/bind events
@@ -184,33 +185,57 @@ class App extends Component {
   //Handles scrolling for the horizontal bin holding div
   handleScroll(e) {
 
+    //First, check if the user isn't dragging
     if (this.state.allowHorizontalScroll === true) {
-      
-      let bin = document.getElementById('bin-container');
-      let binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
-      //Try to scroll within one bin's width (to prevent visual jank)
-      let elementWidth = bin.offsetWidth +
-                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
-                //(parseFloat(binStyle.paddingLeft) + parseFloat(binStyle.paddingRight)) +
-                //(parseFloat(binStyle.borderLeftWidth) + parseFloat(binStyle.borderRightWidth));
+        //Second, check if the scrolling timer has timed out
+        if ( this.state.isScrolling === false ) {
+          let bin = document.getElementById('bin-container');
+          let binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
+          //Try to scroll within one bin's width (to prevent visual jank)
+          let elementWidth = bin.offsetWidth +
+                    (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
 
-      const currentScrollDelta = this.Scrollbar.getScrollLeft();
-      console.log("<------------------>");
-      console.log(currentScrollDelta);
-      console.log(bin.offsetWidth);
-      console.log(elementWidth);
-      console.log(e.deltaY);
-      console.log("+-----------------+");
-      this.Scrollbar.scrollLeft(currentScrollDelta + (e.deltaY / Math.abs(e.deltaY)) * elementWidth);
+          //Duration is miliseconds
+          let duration = 200,
+              currentTime = 0,
+              increment = 10;
+
+          const currentScrollDelta = this.Scrollbar.getScrollLeft();
+
+          //"Animates" the movement of the scroll by incremental changes, then callback
+          var animateScroll = function(scrollbar) {
+            currentTime += increment;
+            let deltaPos = taskFunctions.easeInOutQuad(currentTime, 0, elementWidth, duration);
+            scrollbar.scrollLeft(currentScrollDelta + (e.deltaY / Math.abs(e.deltaY)) * deltaPos);
+            if(currentTime < duration) {
+              window.requestAnimationFrame( function() { animateScroll(scrollbar); } );
+            }
+          }; 
+
+          this.setState({
+            isScrolling: true
+          });
+
+          //Set the timer to prevent the user from scrolling (temp fix for visual jank)
+          setTimeout( () => {
+            this.setState({
+              isScrolling: false
+            });
+          }, (duration + duration/2 + 50));
+
+          //Need a reference to pass to the anonymous function
+          const scrollbar = this.Scrollbar;
+          window.requestAnimationFrame( function() { animateScroll(scrollbar); } );
+      }
     }
  }
 
   //Scrolls to the curent day
   scrollToToday(e) {
     const currentScrollDelta = this.Scrollbar.getScrollLeft();
-    this.Scrollbar.scrollLeft(currentScrollDelta + 20);
+    this.Scrollbar.scrollLeft(currentScrollDelta + 300);
     console.log(this.Scrollbar.getValues());
   } 
 
@@ -332,6 +357,7 @@ class App extends Component {
       <DragDropContext
       onDragEnd={this.onDragEnd}
       onBeforeCapture={this.onBeforeCapture}
+      onWheel={this.handleScroll}
       >
         <div>
         <Header newCardId={this.state.taskNum + 1}
@@ -350,7 +376,6 @@ class App extends Component {
               ref={ (Scrollbar) => {this.Scrollbar = Scrollbar;} }
               autoHeight={true}
               autoHeightMax={1000}
-              onWheel={this.handleScroll}
               renderTrackHorizontal={props => <div {...props} className="track-horizontal" 
                                                style={(this.state.allowHorizontalScroll) ? {backgroundColor: 'rgba(49, 49, 49, 0.3)'} :
                                                       {backgroundColor: 'rgba(49, 49, 49, 0.5)'}}
