@@ -55,12 +55,15 @@ class App extends Component {
     tempAdderBin.cards.push(newNum);
     window.addEventListener('wheel', this.handleScroll);
 
+    const today = new Date();
+
     this.setState({
       cardList: newCardList,
       bins: newBins,
       taskNum: newNum,
       adderBin: tempAdderBin,
-      focusedBin: tempFocusBin
+      focusedBin: tempFocusBin,
+      currentDate: today
     })
   }
 
@@ -190,29 +193,14 @@ class App extends Component {
 
         //Second, check if the scrolling timer has timed out
         if ( this.state.isScrolling === false ) {
-          let bin = document.getElementById('bin-container');
-          let binStyle = bin.currentStyle || window.getComputedStyle(bin);
+          const bin = document.getElementById('bin-container');
+          const binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
           //Try to scroll within one bin's width (to prevent visual jank)
-          let elementWidth = bin.offsetWidth +
+          const elementWidth = bin.offsetWidth +
                     (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
 
-          //Duration is miliseconds
-          let duration = 200,
-              currentTime = 0,
-              increment = 10;
-
-          const currentScrollDelta = this.Scrollbar.getScrollLeft();
-
-          //"Animates" the movement of the scroll by incremental changes, then callback
-          var animateScroll = function(scrollbar) {
-            currentTime += increment;
-            let deltaPos = taskFunctions.easeInOutQuad(currentTime, 0, elementWidth, duration);
-            scrollbar.scrollLeft(currentScrollDelta + (e.deltaY / Math.abs(e.deltaY)) * deltaPos);
-            if(currentTime < duration) {
-              window.requestAnimationFrame( function() { animateScroll(scrollbar); } );
-            }
-          }; 
+          const duration = 200;
 
           this.setState({
             isScrolling: true
@@ -225,18 +213,48 @@ class App extends Component {
             });
           }, (duration + duration/2 + 50));
 
-          //Need a reference to pass to the anonymous function
-          const scrollbar = this.Scrollbar;
-          window.requestAnimationFrame( function() { animateScroll(scrollbar); } );
+          taskFunctions.animateHorizontalScroll(this.Scrollbar, elementWidth, duration, (e.deltaY / Math.abs(e.deltaY)));
       }
     }
  }
 
   //Scrolls to the curent day
   scrollToToday(e) {
-    const currentScrollDelta = this.Scrollbar.getScrollLeft();
-    this.Scrollbar.scrollLeft(currentScrollDelta + 300);
-    console.log(this.Scrollbar.getValues());
+
+    if ( this.state.isScrolling === false ) {
+
+      const bin = document.getElementById('bin-container');
+      const binStyle = bin.currentStyle || window.getComputedStyle(bin);
+
+      //Try to scroll within one bin's width (to prevent visual jank)
+      const elementWidth = bin.offsetWidth +
+                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+
+      //Gets the current position of the MIDDLE bin
+      const currentMiddleBin = this.Scrollbar.getScrollLeft() + elementWidth * 3;
+
+      //Calculate the absolute position of the "current day" bin
+      const todayBin = (this.state.currentDate.getDate() * elementWidth) - elementWidth;
+
+      //Calculate the distance needed to move 
+      const distance = todayBin - currentMiddleBin;
+
+      //Duration is in milliseconds
+      const duration = 400;
+
+      this.setState({
+        isScrolling: true
+      });
+
+      //Set the timer to prevent the user from scrolling (temp fix for visual jank)
+      setTimeout( () => {
+        this.setState({
+          isScrolling: false
+        });
+      }, (duration + duration/2 + 50));
+      
+      taskFunctions.animateHorizontalScroll(this.Scrollbar, Math.abs(distance), duration, Math.sign(distance));
+    }
   } 
 
   //A new task is being added

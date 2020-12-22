@@ -24,25 +24,26 @@ export const generateBins = () => {
     let i = 1;
     while((tempDate.getMonth() % 12) !== (today.getMonth() + 1) % 12) {
 
+        var backColor, dayColor;
         //Set background color
         if (tempDate.getDate() === today.getDate()) {
-            var backColor = backColors[2];
+            backColor = backColors[2];
         } else if (tempDate.getDate() < today.getDate()) {
-            var backColor = backColors[1];
+            backColor = backColors[1];
         } else {
-            var backColor = backColors[0];
+            backColor = backColors[0];
         } 
 
         //Set day header colors
         switch (tempDate.getDay()) {
             case 0: 
-                var dayColor = dayColors[2]
+                dayColor = dayColors[2]
             break;
             case 6: 
-                var dayColor = dayColors[1]
+                dayColor = dayColors[1]
             break;
             default: 
-                var dayColor = dayColors[0]
+                dayColor = dayColors[0]
             break;
         }
 
@@ -120,7 +121,7 @@ export const getTaskNum = () => {
     return data.length;
 }
 
-export const getData= () => {
+export const getData = () => {
     return data;
 }
 
@@ -161,4 +162,34 @@ export const extraBins = [
 //Colors go from priority 1 -> 4 + "complete"
 export const colors = ["#CA2934", "#F89406", "#EBEB13", "#20DB30", "rgb(122, 122, 122)"];
 
+//An easing function for animating the scroll sliding
+export const easeInOutQuad = (t, b, c, d) => {
+    t /= d/2;
+    if (t < 1) return c/2*t*t + b;
+    t--;
+    return -c/2 * (t*(t-2) - 1) + b;
+};
 
+/*Animates the horizontal scrolling 
+ * Distance is in pixels
+ * Duration is in milliseconds
+ * Direction is either -1 (for left) or 1 (for right)
+ */
+export const animateHorizontalScroll = (scrollObj, distance, duration, direction) => {
+    let currentTime = 0, 
+        increment = 10;
+
+    const currentScrollDelta = scrollObj.getScrollLeft();
+
+    //"Animates" the movement of the scroll by incremental changes, then callback
+    var animateScroll = function(scrollbar) {
+        currentTime += increment;
+        let deltaPos = easeInOutQuad(currentTime, 0, distance, duration);
+        scrollbar.scrollLeft(currentScrollDelta + direction * deltaPos);
+        if(currentTime < duration) {
+            window.requestAnimationFrame( function() { animateScroll(scrollbar); } );
+        }
+    }; 
+
+    window.requestAnimationFrame( function() { animateScroll(scrollObj); } );
+}
