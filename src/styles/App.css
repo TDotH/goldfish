@@ -8,15 +8,6 @@
   border: none !important;
 }
 
-#Taskbins {
-  display: flex;
-  flex-direction: row;
-  align-self: center;
-  text-align: center;
-  height: 500px;
-  scrollbar-width: none !important;
-}
-
 .App {
   display: flex;
   flex-direction: column;
@@ -128,4 +119,9 @@
   overflow: scroll;
   margin-right: -15px;
   margin-bottom: -17px !important;
+  display: flex;
+  flex-direction: row;
+  align-self: center;
+  text-align: center;
+  height: 500px;
 }
