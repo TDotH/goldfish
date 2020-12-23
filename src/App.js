@@ -21,7 +21,8 @@ class App extends Component {
       showNewTask: false,
       showBinFocus: false,
       allowHorizontalScroll: true,
-      isDragging: false
+      isDragging: false,
+      isScrolling: false
     };
 
     //Mount/bind events
@@ -31,7 +32,8 @@ class App extends Component {
     this.closeNewTask = this.closeNewTask.bind(this);
     this.openFocusBin = this.openFocusBin.bind(this);
     this.closeFocusBin = this.closeFocusBin.bind(this);
-    this.handleScroll = this.handleScroll.bind(this);
+    this.handleWheel = this.handleWheel.bind(this);
+    this.handleScrollbarDrag = this.handleScrollbarDrag.bind(this);
     this.scrollToToday = this.scrollToToday.bind(this);
     this.onBinEnter = this.onBinEnter.bind(this); 
     this.onBinLeave = this.onBinLeave.bind(this); 
@@ -52,20 +54,40 @@ class App extends Component {
     newCard._id = (newNum + 1).toString();
     newCardList.push(newCard);
     tempAdderBin.cards.push(newNum);
-    window.addEventListener('wheel', this.handleScroll);
+    window.addEventListener('wheel', this.handleWheel);
+
+    const today = new Date();
 
     this.setState({
       cardList: newCardList,
       bins: newBins,
       taskNum: newNum,
       adderBin: tempAdderBin,
-      focusedBin: tempFocusBin
+      focusedBin: tempFocusBin,
+      currentDate: today
+    });
+    
+    //Need a reference to the scrollbar to pass 
+    const scrollbar = this.Scrollbar;
+
+    /*Makes sure that the current day is centered on first load
+     *Used to ensure that the code is run AFTER everything is rendered
+     */
+    window.requestAnimationFrame(function() {
+      const bin = document.getElementById('bin-container');
+      const binStyle = bin.currentStyle || window.getComputedStyle(bin);
+
+      //Try to scroll within one bin's width (to prevent visual jank)
+      const elementWidth = bin.offsetWidth +
+                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+
+      scrollbar.scrollLeft(today.getDate() * elementWidth - elementWidth*4);
     })
   }
 
   //Called if the component will be unmounted
   componentWillUnmount() {
-    window.removeEventListener('wheel', this.handleScroll);
+    window.removeEventListener('wheel', this.handleWheel);
   }
 
    //Lock horizontal scrolling to prevent weird visual glitches
@@ -74,7 +96,6 @@ class App extends Component {
       allowHorizontalScroll: false,
       isDragging: true
     });
-    //console.log(result);
   }
 
   /* Documentation states that during dragging ALL updates to 
@@ -182,29 +203,122 @@ class App extends Component {
   }
 
   //Handles scrolling for the horizontal bin holding div
-  handleScroll(e) {
+  handleWheel(e) {
 
+    //First, check if the user isn't dragging
     if (this.state.allowHorizontalScroll === true) {
-      
-      let bin = document.getElementById('bin-container');
-      let binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
-      let elementWidth = bin.offsetWidth -
-                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight)) +
-                (parseFloat(binStyle.paddingLeft) + parseFloat(binStyle.paddingRight)) -
-                (parseFloat(binStyle.borderLeftWidth) + parseFloat(binStyle.borderRightWidth));
+        //Second, check if the scrolling timer has timed out
+        if ( this.state.isScrolling === false ) {
+          const bin = document.getElementById('bin-container');
+          const binStyle = bin.currentStyle || window.getComputedStyle(bin);
 
-      const currentScrollDelta = this.Scrollbar.getScrollLeft();
-      this.Scrollbar.scrollLeft(currentScrollDelta + (e.deltaY / Math.abs(e.deltaY)) * elementWidth);
+          //Try to scroll within one bin's width (to prevent visual jank)
+          const elementWidth = bin.offsetWidth +
+                    (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+
+          const duration = 200;
+
+          this.setState({
+            isScrolling: true
+          });
+
+          //Set the timer to prevent the user from scrolling (temp fix for visual jank)
+          setTimeout( () => {
+            this.setState({
+              isScrolling: false
+            });
+          }, (duration + duration/2 + 50));
+
+          taskFunctions.animateHorizontalScroll(this.Scrollbar, elementWidth, duration, (e.deltaY / Math.abs(e.deltaY)));
+      }
     }
  }
 
   //Scrolls to the curent day
   scrollToToday(e) {
-    const currentScrollDelta = this.Scrollbar.getScrollLeft();
-    this.Scrollbar.scrollLeft(currentScrollDelta + 20);
-    console.log(this.Scrollbar.getValues());
-  } 
+
+    if ( this.state.isScrolling === false ) {
+
+      const bin = document.getElementById('bin-container');
+      const binStyle = bin.currentStyle || window.getComputedStyle(bin);
+
+      //Try to scroll within one bin's width (to prevent visual jank)
+      const elementWidth = bin.offsetWidth +
+                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+
+      //Get the current position of the MIDDLE bin (3 is three bins past the leftmost bin)
+      const currentMiddleBin = this.Scrollbar.getScrollLeft() + elementWidth * 3;
+
+      //Calculate the absolute position of the "current day" bin
+      const todayBin = (this.state.currentDate.getDate() * elementWidth) - elementWidth;
+
+      //Calculate the distance needed to move 
+      const distance = todayBin - currentMiddleBin;
+
+      //Duration is in milliseconds
+      const duration = 400;
+
+      this.setState({
+        isScrolling: true
+      });
+
+      //Set the timer to prevent the user from scrolling (temp fix for visual jank)
+      setTimeout( () => {
+        this.setState({
+          isScrolling: false
+        });
+      }, (duration + duration/2 + 50));
+      
+      taskFunctions.animateHorizontalScroll(this.Scrollbar, Math.abs(distance), duration, Math.sign(distance));
+    }
+  }
+  
+  //Snaps to the nearest bin on drag end (mainly for scrollbar dragging)
+  handleScrollbarDrag() {
+
+    if ( this.state.isScrolling === false ) {
+      const bin = document.getElementById('bin-container');
+      const binStyle = bin.currentStyle || window.getComputedStyle(bin);
+
+      //Try to scroll within one bin's width (to prevent visual jank)
+      const elementWidth = bin.offsetWidth +
+                (parseFloat(binStyle.marginLeft) + parseFloat(binStyle.marginRight));
+
+      //Calculate the distance to the nearest bin
+      const closestBin = this.Scrollbar.getScrollLeft() % elementWidth;
+
+      if ( closestBin > 0 ) {
+
+        //Time is in milliseconds
+        const snapTimer = 30;
+        const duration = 200;
+
+        let distance = -1;
+        if ( closestBin > elementWidth/2 ) {
+          distance = elementWidth - closestBin;
+        } else {
+          distance = -closestBin;
+        }
+
+        this.setState({
+          isScrolling: true
+        });
+
+        setTimeout( () => {
+          taskFunctions.animateHorizontalScroll(this.Scrollbar, Math.abs(distance), duration, Math.sign(distance));
+          }, snapTimer);
+
+        //Set the timer to prevent the user from scrolling (temp fix for visual jank)
+        setTimeout( () => {
+          this.setState({
+            isScrolling: false
+          });
+        }, (snapTimer + duration + duration/2));
+
+      }
+    }
+  }
 
   //A new task is being added
   addTask() {
@@ -324,6 +438,7 @@ class App extends Component {
       <DragDropContext
       onDragEnd={this.onDragEnd}
       onBeforeCapture={this.onBeforeCapture}
+
       >
         <div>
         <Header newCardId={this.state.taskNum + 1}
@@ -340,10 +455,10 @@ class App extends Component {
         <div className="App">
             <Scrollbars id="Scrollbar"
               ref={ (Scrollbar) => {this.Scrollbar = Scrollbar;} }
-         
               autoHeight={true}
               autoHeightMax={1000}
-              onWheel={this.handleScroll}
+              onWheel={this.handleWheel}
+              onScrollStop={this.handleScrollbarDrag}
               renderTrackHorizontal={props => <div {...props} className="track-horizontal" 
                                                style={(this.state.allowHorizontalScroll) ? {backgroundColor: 'rgba(49, 49, 49, 0.3)'} :
                                                       {backgroundColor: 'rgba(49, 49, 49, 0.5)'}}
@@ -354,27 +469,25 @@ class App extends Component {
                                               />}  
               renderView={props => <div {...props} className="view"/>}
             >
-            <div id="Taskbins">
-            {this.state.bins.map((bin, index) => (
-              <Bin header={bin.header} 
-                  date={bin.date}
-                  binId = {bin._id}
-                  key={bin._id} 
-                  droppableId={bin._id} 
-                  backColor={bin.backingColor}
-                  dayColor={bin.headerColor}
-                  cards={bin.cards}
-                  isDisabled={this.state.showBinFocus}  
-                  openFocusBin={this.openFocusBin} 
-                  cardList={this.state.cardList}
-                  onBinEnter={this.onBinEnter}
-                  onBinLeave={this.onBinLeave}
-                  handleCardEdit={this.handleCardEdit}
-                  finishTask={this.finishTask}
-                  deleteTask={this.deleteTask}
-              />
-          ))}
-          </div>
+              {this.state.bins.map((bin, index) => (
+                <Bin header={bin.header} 
+                    date={bin.date}
+                    binId = {bin._id}
+                    key={bin._id} 
+                    droppableId={bin._id} 
+                    backColor={bin.backingColor}
+                    dayColor={bin.headerColor}
+                    cards={bin.cards}
+                    isDisabled={this.state.showBinFocus}  
+                    openFocusBin={this.openFocusBin} 
+                    cardList={this.state.cardList}
+                    onBinEnter={this.onBinEnter}
+                    onBinLeave={this.onBinLeave}
+                    handleCardEdit={this.handleCardEdit}
+                    finishTask={this.finishTask}
+                    deleteTask={this.deleteTask}
+                />
+            ))}
           </Scrollbars>
           <div>
             <BinFocused droppableId={taskFunctions.otherBins.focusedBin}

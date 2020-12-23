@@ -1,17 +1,11 @@
-:root { scrollbar-width: none !important; } 
+:root { 
+  scrollbar-width: none !important; 
+  --bin-width: 215.75px;
+} 
 
 *:focus {
   outline: none !important;
   border: none !important;
-}
-
-#Taskbins {
-  display: flex;
-  flex-direction: row;
-  align-self: center;
-  text-align: center;
-  height: 500px;
-  scrollbar-width: none !important;
 }
 
 .App {
@@ -88,7 +82,8 @@
   flex-direction: row;
   align-self: center;
   text-align: center;
-  width: 1483px;
+  min-width: calc(var(--bin-width) * 7);
+  max-width: calc(var(--bin-width) * 7);
   height: 500px;
   overflow-x: auto;
 }
@@ -124,4 +119,9 @@
   overflow: scroll;
   margin-right: -15px;
   margin-bottom: -17px !important;
+  display: flex;
+  flex-direction: row;
+  align-self: center;
+  text-align: center;
+  height: 500px;
 }
