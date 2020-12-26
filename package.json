@@ -10,7 +10,8 @@
     "start-client": "npm start --prefix ./client",
     "build": "concurrently --kill-others-on-fail \"npm run-script build-client\" \"npm start\"",
     "build-client": "npm run build --prefix ./client",
-    "heroku-postbuild": "npm install --only=dev && npm install && npm run build"
+    "heroku-postbuild": "concurrently --kill-others-on-fail \"npm run-script build-client-heroku\" \"npm start\"",
+    "build-client-heroku": "npm run build-heroku --prefix ./client"
   },
   "dependencies": {
     "concurrently": "^5.3.0"
