@@ -1,47 +1,17 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
+  "name": "goldfish-root",
+  "version": "1.1.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.11.5",
-    "@testing-library/react": "^11.1.1",
-    "@testing-library/user-event": "^12.2.0",
-    "browserify-fs": "^1.0.0",
-    "fs": "0.0.1-security",
-    "react": "^17.0.1",
-    "react-beautiful-dnd": "^13.0.0",
-    "react-contenteditable": "^3.3.5",
-    "react-custom-scrollbars": "^4.2.1",
-    "react-dom": "^17.0.1",
-    "react-inline-editing": "^1.0.10",
-    "react-modal": "^3.11.2",
-    "react-onclickoutside": "^6.9.0",
-    "react-scripts": "4.0.0",
-    "react-scroll": "^1.8.1",
-    "web-vitals": "^0.2.4"
+  "engines": {
+    "node": "14.x"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "npm start --prefix ./server",
+    "start-client": "npm start --prefix ./client",
+    "build": "concurrently --kill-others-on-fail \"npm run-script build-client\" \"npm start\"",
+    "build-client": "npm run build --prefix ./client"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "concurrently": "^5.3.0"
   }
 }
