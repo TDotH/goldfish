@@ -3,7 +3,8 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
-    "start": "node Server.js"
+    "start": "node Server.js",
+    "build": "npm install && npm start"
   },
   "dependencies": {
     "express": "^4.17.1"
