@@ -53,8 +53,7 @@ class Card extends Component{
             <div id="card-container">
                 <Draggable
                 index={this.props.index}
-                //Assume that given id is not a string already
-                draggableId={this.props.draggableId}>
+                draggableId={this.props.draggableId.toString()}>
                     {(provided, snapshot) => (
                         <div 
                             ref={provided.innerRef}
@@ -63,7 +62,7 @@ class Card extends Component{
                             className="drag-handle"
                             >
                             <div
-                                style={(!this.props.cardInfo.complete) ? {backgroundColor: taskFunctions.colors[this.props.cardInfo.quad - 1]}:
+                                style={(!this.props.cardInfo.complete) ? {backgroundColor: taskFunctions.colors[this.props.cardInfo.priority - 1]}:
                                                                        {backgroundColor: taskFunctions.colors[4],
                                                                         opacity: 0.75}
                                 }
@@ -83,7 +82,7 @@ class Card extends Component{
                                     {provided.placeholder}                               
                                 </div>
 
-                                <select value={this.props.cardInfo.quad}
+                                <select value={this.props.cardInfo.priority}
                                         onChange={this.handleChange}
                                         className="priority">
                                         <option value="1">1</option>

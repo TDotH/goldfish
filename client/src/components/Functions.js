@@ -1,5 +1,3 @@
-import data from "../data.json";
-
 //Quick and dirty array for bin headers...change later to use actual dates
 const dayArray = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -9,13 +7,10 @@ const backColors = ["#e0e0e0", "#6D6D6D", "#7373CB"]
 //Used to help set day header colors (Normal, Sunday, Saturday)
 const dayColors = ["#FAFAFA", "#322acb", "#CA2934"];
 
-//Will create an array of bins for the current month, then use the information from taskList.json to populate the "cards" subarray
-export const generateBins = () => {
+//Generates a set of empty bins for the current month of the given date
+export const generateBins = (today) => {
 
     var retBins = [];
-
-    //Date time stuff
-    let today = new Date();
 
     //Temp date to loop through
     let tempDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -59,16 +54,20 @@ export const generateBins = () => {
         tempDate.setDate(tempDate.getDate() + 1);
     }
 
+    return retBins;
+}
+
+//Will add the task ids from the task list to the given set of bins
+export const populateBins = (taskList, bins) => {
+
     //Push the actual index of the given card
-    for (let i = 0; i < (data.length); i++ ) {
-        let tempBin = retBins.find(x => x._id === parseInt(data[i]._binId));
+    for (let i = 0; i < (taskList.length); i++ ) {
+        let tempBin = bins.find(x => x._id === taskList[i]._binId);
         //Check for undefined and null (to prevent dev error on reload)
         if ((typeof(tempBin) !== 'undefined') && tempBin !== null) {
             tempBin.cards.push(i);
         }
     }
-
-    return retBins;
 }
 
 //Reordering cards (when dragged within the same bin)
@@ -116,22 +115,12 @@ export const addCard = (list, source, dest) => {
     return result;
 }
 
-//Getter to keep track of number of tasks (for id generation)
-export const getTaskNum = () => {
-    return data.length;
-}
-
-export const getData = () => {
-    return data;
-}
-
 //Defaults when adding a new card
 export const defaultCard = {
-        "_id": "-1",
-        "_binId": "-1",
+        "_id": -1,
+        "_binId": -1,
         "name": "Default Task",
-        "quad": 2,
-        "prio": 22,
+        "priority": 2,
         "due": "2015-02-12T09:32:19 +08:00",
         "location": "730 Pierrepont Street, Temperanceville, Guam, 3846",
         "comment": "Lorem elit non dolor fugiat eu non laborum do duis",

@@ -22,7 +22,8 @@ class App extends Component {
       showBinFocus: false,
       allowHorizontalScroll: true,
       isDragging: false,
-      isScrolling: false
+      isScrolling: false,
+      taskNum: 0
     };
 
     //Mount/bind events
@@ -44,24 +45,13 @@ class App extends Component {
 
   //Called only once (after mounted onto DOM)
   componentDidMount() {
-    const newBins = taskFunctions.generateBins();
-    const newNum = taskFunctions.getTaskNum();
-    const tempFocusBin = taskFunctions.extraBins[1];
-    const newCardList = taskFunctions.getData();
-    let tempAdderBin = taskFunctions.extraBins[0];
-    let newCard = Object.assign({}, taskFunctions.defaultCard);
-
-    newCard._id = (newNum + 1).toString();
-    newCardList.push(newCard);
-    tempAdderBin.cards.push(newNum);
-    window.addEventListener('wheel', this.handleWheel);
-
     const today = new Date();
-
+    const newBins = taskFunctions.generateBins(today);
+    const tempFocusBin = taskFunctions.extraBins[1];
+    let tempAdderBin = taskFunctions.extraBins[0];
+    
     this.setState({
-      cardList: newCardList,
       bins: newBins,
-      taskNum: newNum,
       adderBin: tempAdderBin,
       focusedBin: tempFocusBin,
       currentDate: today
@@ -69,6 +59,7 @@ class App extends Component {
     
     //Need a reference to the scrollbar to pass 
     const scrollbar = this.Scrollbar;
+    window.addEventListener('wheel', this.handleWheel);
 
     /*Makes sure that the current day is centered on first load
      *Used to ensure that the code is run AFTER everything is rendered
@@ -83,11 +74,59 @@ class App extends Component {
 
       scrollbar.scrollLeft(today.getDate() * elementWidth - elementWidth*4);
     })
+
+    //Do a get call to the server to get sql data
+    fetch('/tasks', {
+      method: "GET",
+      mode: 'cors',
+      headers: {
+        "Accept": "application/json",
+        'Access-Control-Allow-Origin':'*'
+      }
+    })
+      .then( response => response.json() )
+      .then( data => {
+        let tempBins = this.state.bins;
+        taskFunctions.populateBins(data, tempBins);
+
+        const newNum = data.length;
+        const aCardList = data;
+
+        //Create a new temp card and push to the stack
+        let newCard = Object.assign({}, taskFunctions.defaultCard);
+        newCard._id = (newNum + 1);
+
+        aCardList.push(newCard);
+
+        let adderBin = this.state.adderBin;
+        adderBin.cards.push(newNum);
+
+        this.setState({
+          cardList: aCardList,
+          adderBin: adderBin,
+          bins: tempBins,
+          taskNum: newNum
+        })
+      })
+      .catch( err => {
+        console.log(err);
+      })
+
   }
 
   //Called if the component will be unmounted
   componentWillUnmount() {
     window.removeEventListener('wheel', this.handleWheel);
+
+    //Close the connection to the db
+    fetch('/close', {
+      method: "GET",
+      mode: 'cors',
+      headers: {
+        "Accept": "application/json",
+        'Access-Control-Allow-Origin':'*'
+      }
+    })
   }
 
    //Lock horizontal scrolling to prevent weird visual glitches
@@ -164,7 +203,7 @@ class App extends Component {
 
       //Create a brand new card
       var newCard = Object.assign({}, taskFunctions.defaultCard);
-      newCard._id = (newTaskNum + 1).toString();
+      newCard._id = (newTaskNum + 1);
       let newCardList = this.state.cardList;
 
       newCardList.push(newCard);
@@ -190,7 +229,7 @@ class App extends Component {
 
       //Update the bin id of the card
       let newCardList = this.state.cardList;
-      newCardList.find(x => x._id === result.draggableId)._binId = result.destination.droppableId;
+      newCardList.find(x => x._id === parseInt(result.draggableId))._binId = result.destination.droppableId;
 
       this.setState ({
         cardList: newCardList,
@@ -386,7 +425,7 @@ class App extends Component {
         break;
 
       case 'priority':
-        newCard.quad = targetValue;
+        newCard.priority = targetValue;
         break;
 
       default:
@@ -405,7 +444,7 @@ class App extends Component {
   deleteTask(cardId, binId, cardIndex) {
 
     //Ignore if the card is a new card being added
-    if (cardId !== (this.state.taskNum + 1).toString()) {
+    if (cardId !== (this.state.taskNum + 1)) {
       //First remove the reference from the bin
       let tempBins = this.state.bins;
       let tempCards = tempBins.find(x => x._id === parseInt(binId)).cards;
@@ -422,7 +461,7 @@ class App extends Component {
   finishTask(cardId) {
 
     //Ignore if the card is a new card being added
-    if (cardId !== (this.state.taskNum + 1).toString()) {
+    if (cardId !== (this.state.taskNum + 1)) {
       let tempCardList = this.state.cardList;
       let tempCard = tempCardList.find(x => x._id === cardId);
       tempCard.complete = !tempCard.complete;
