@@ -1,8 +1,7 @@
 const { Pool } = require('pg');
 
 //URI from Heroku, not permanent since Heroku rotates the credentials every once in a awhile
-const connectionString = process.env.DATABASE_URL || "postgres://ethczpetqidjzl:8b637f0027709d68f9e7e9f8ba33790846f9189a5feedc178d0d65fe44e2d5b2@ec2-3-218-123-191.compute-1.amazonaws.com:5432/d9kup0joljq3ru";
-
+const connectionString = process.env.DATABASE_URL;
 const query = 'SELECT * FROM "Tasks"';
 
 //Pg pools keep the connection "hot" to reuse client requests 
